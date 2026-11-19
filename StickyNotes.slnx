@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/StickyNotes.App/StickyNotes.App.csproj" />
+    <Project Path="src/StickyNotes.Core/StickyNotes.Core.csproj" />
+    <Project Path="src/StickyNotes.Infrastructure/StickyNotes.Infrastructure.csproj" />
+    <Project Path="src/StickyNotes.Platform/StickyNotes.Platform.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/StickyNotes.Core.Tests/StickyNotes.Core.Tests.csproj" />
+    <Project Path="tests/StickyNotes.Infrastructure.Tests/StickyNotes.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>

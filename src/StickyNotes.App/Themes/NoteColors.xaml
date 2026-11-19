@@ -1,0 +1,36 @@
+<!-- Paleta pastel de las notas. Única fuente de verdad: la usan NoteColorBrushConverter y NotePalette.
+     Clave: Note.{NoteColor}.{Body|Header|Border}. -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="Note.Yellow.Body" Color="#FFF7B1" />
+    <SolidColorBrush x:Key="Note.Yellow.Header" Color="#FBE680" />
+    <SolidColorBrush x:Key="Note.Yellow.Border" Color="#E3CC5C" />
+
+    <SolidColorBrush x:Key="Note.Pink.Body" Color="#FFD9E8" />
+    <SolidColorBrush x:Key="Note.Pink.Header" Color="#FBBCD5" />
+    <SolidColorBrush x:Key="Note.Pink.Border" Color="#E7A2BE" />
+
+    <SolidColorBrush x:Key="Note.Green.Body" Color="#D8F5CC" />
+    <SolidColorBrush x:Key="Note.Green.Header" Color="#BAE8A8" />
+    <SolidColorBrush x:Key="Note.Green.Border" Color="#9CCF88" />
+
+    <SolidColorBrush x:Key="Note.Blue.Body" Color="#D6EBFF" />
+    <SolidColorBrush x:Key="Note.Blue.Header" Color="#B5D7FA" />
+    <SolidColorBrush x:Key="Note.Blue.Border" Color="#93BDE6" />
+
+    <SolidColorBrush x:Key="Note.Orange.Body" Color="#FFE4C7" />
+    <SolidColorBrush x:Key="Note.Orange.Header" Color="#FFCB98" />
+    <SolidColorBrush x:Key="Note.Orange.Border" Color="#E9AF78" />
+
+    <SolidColorBrush x:Key="Note.Purple.Body" Color="#E9DEFF" />
+    <SolidColorBrush x:Key="Note.Purple.Header" Color="#D3C2FA" />
+    <SolidColorBrush x:Key="Note.Purple.Border" Color="#B7A2E6" />
+
+    <!-- Colores comunes a todas las notas -->
+    <SolidColorBrush x:Key="Note.Foreground" Color="#2B2B2B" />
+    <SolidColorBrush x:Key="Note.Muted" Color="#7A6F5A" />
+    <SolidColorBrush x:Key="Note.Hover" Color="#22000000" />
+    <SolidColorBrush x:Key="Note.Pressed" Color="#38000000" />
+    <SolidColorBrush x:Key="Note.Due" Color="#C62828" />
+    <SolidColorBrush x:Key="Note.Flash" Color="#E65100" />
+</ResourceDictionary>

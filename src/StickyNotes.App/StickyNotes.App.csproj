@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <RootNamespace>StickyNotes.App</RootNamespace>
+    <AssemblyName>Kip</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- WFO0003: la app es WPF; el DPI PerMonitorV2 se declara en app.manifest a propósito. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\Kip.ico</ApplicationIcon>
+    <Product>Kip</Product>
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StickyNotes.Core\StickyNotes.Core.csproj" />
+    <ProjectReference Include="..\StickyNotes.Infrastructure\StickyNotes.Infrastructure.csproj" />
+    <ProjectReference Include="..\StickyNotes.Platform\StickyNotes.Platform.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="11.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Kip.ico" />
+  </ItemGroup>
+</Project>

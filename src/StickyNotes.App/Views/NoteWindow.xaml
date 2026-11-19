@@ -1,0 +1,267 @@
+<Window x:Class="StickyNotes.App.Views.NoteWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:StickyNotes.App.ViewModels"
+        xmlns:models="clr-namespace:StickyNotes.Core.Models;assembly=StickyNotes.Core"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:NoteViewModel}"
+        Title="{Binding Title}"
+        WindowStyle="None" ResizeMode="NoResize" Topmost="True" ShowInTaskbar="False"
+        ShowActivated="False" UseLayoutRounding="True" Language="es-ES"
+        FontFamily="Segoe UI"
+        Foreground="{DynamicResource Note.Foreground}"
+        Background="{Binding Color, Converter={StaticResource NoteColorBrush}, ConverterParameter=Body}">
+
+    <!-- Sin AllowsTransparency (rendimiento). GlassFrameThickness=1 abajo hace que DWM dibuje la sombra. -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="0" ResizeBorderThickness="0" GlassFrameThickness="0,0,0,1"
+                      CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Border BorderThickness="1"
+            BorderBrush="{Binding Color, Converter={StaticResource NoteColorBrush}, ConverterParameter=Border}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="28" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="24" />
+            </Grid.RowDefinitions>
+
+            <!-- ───── Cabecera (zona de arrastre) ───── -->
+            <Border Grid.Row="0" x:Name="Header" MouseLeftButtonDown="Header_MouseLeftButtonDown"
+                    Background="{Binding Color, Converter={StaticResource NoteColorBrush}, ConverterParameter=Header}">
+                <DockPanel LastChildFill="True">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="0,0,2,0">
+                        <Button Style="{StaticResource IconButton}" Content="&#xE710;" ToolTip="Nueva nota"
+                                Command="{Binding NewNoteCommand}" />
+
+                        <ToggleButton x:Name="ColorButton" Style="{StaticResource IconToggleButton}" Content="&#xE790;"
+                                      ToolTip="Color" IsChecked="{Binding IsColorPopupOpen}" />
+                        <ToggleButton x:Name="SizeButton" Style="{StaticResource IconToggleButton}" Content="&#xE740;"
+                                      ToolTip="Tamaño" IsChecked="{Binding IsSizePopupOpen}" />
+                        <ToggleButton x:Name="ReminderButton" Style="{StaticResource IconToggleButton}" Content="&#xE823;"
+                                      ToolTip="Recordatorio" IsChecked="{Binding IsReminderPopupOpen}" />
+                        <ToggleButton ToolTip="{Binding LockToolTip}" IsChecked="{Binding IsPositionLocked}">
+                            <ToggleButton.Style>
+                                <Style TargetType="ToggleButton" BasedOn="{StaticResource IconToggleButton}">
+                                    <Setter Property="Content" Value="&#xE785;" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPositionLocked}" Value="True">
+                                            <Setter Property="Content" Value="&#xE72E;" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ToggleButton.Style>
+                        </ToggleButton>
+
+                        <Button x:Name="MoreButton" Style="{StaticResource IconButton}" Content="&#xE712;" ToolTip="Más opciones"
+                                Click="MoreButton_Click">
+                            <Button.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Letra más grande" Command="{Binding IncreaseFontCommand}" />
+                                    <MenuItem Header="Letra más pequeña" Command="{Binding DecreaseFontCommand}" />
+                                    <MenuItem Header="Agregar tarea" Command="{Binding AddChecklistItemCommand}" />
+                                    <Separator />
+                                    <MenuItem Header="Eliminar nota" Command="{Binding DeleteCommand}" />
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
+
+                        <Button Style="{StaticResource IconButton}" Content="&#xE74D;"
+                                ToolTip="Eliminar (mover a la papelera)" Command="{Binding DeleteCommand}" />
+                    </StackPanel>
+
+                    <!-- Candado visible sólo cuando la posición está bloqueada -->
+                    <TextBlock FontFamily="{StaticResource IconFont}" Text="&#xE72E;" FontSize="11"
+                               Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource Note.Muted}"
+                               ToolTip="Posición bloqueada"
+                               Visibility="{Binding IsPositionLocked, Converter={StaticResource BoolToVis}}" />
+                    <Border Background="Transparent" />
+                </DockPanel>
+            </Border>
+
+            <!-- ───── Popups de la cabecera ───── -->
+            <Popup Grid.Row="0" PlacementTarget="{Binding ElementName=ColorButton}" Placement="Bottom"
+                   StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding IsColorPopupOpen}">
+                <Border Style="{StaticResource PopupBorder}">
+                    <ItemsControl x:Name="ColorList" ItemsSource="{x:Static vm:NoteViewModel.AvailableColors}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource SwatchButton}"
+                                        Background="{Binding Converter={StaticResource NoteColorBrush}, ConverterParameter=Body}"
+                                        BorderBrush="{Binding Converter={StaticResource NoteColorBrush}, ConverterParameter=Border}"
+                                        ToolTip="{Binding Converter={StaticResource ColorName}}"
+                                        Command="{Binding DataContext.SetColorCommand, ElementName=ColorList}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Popup>
+
+            <Popup Grid.Row="0" PlacementTarget="{Binding ElementName=SizeButton}" Placement="Bottom"
+                   StaysOpen="False" AllowsTransparency="True" IsOpen="{Binding IsSizePopupOpen}">
+                <Border Style="{StaticResource PopupBorder}" Padding="4">
+                    <StackPanel>
+                        <StackPanel.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="Padding" Value="10,4" />
+                                <Setter Property="HorizontalContentAlignment" Value="Left" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Template" Value="{StaticResource FlatButtonTemplate}" />
+                            </Style>
+                        </StackPanel.Resources>
+                        <Button Content="Pequeño" Command="{Binding SetSizeCommand}" CommandParameter="{x:Static models:NoteSize.Small}" />
+                        <Button Content="Mediano" Command="{Binding SetSizeCommand}" CommandParameter="{x:Static models:NoteSize.Medium}" />
+                        <Button Content="Grande" Command="{Binding SetSizeCommand}" CommandParameter="{x:Static models:NoteSize.Large}" />
+                    </StackPanel>
+                </Border>
+            </Popup>
+
+            <!-- StaysOpen=True: el calendario del DatePicker es otro popup y cerraría éste. Se cierra al desactivar la nota. -->
+            <Popup Grid.Row="0" PlacementTarget="{Binding ElementName=ReminderButton}" Placement="Bottom"
+                   StaysOpen="True" AllowsTransparency="True" IsOpen="{Binding IsReminderPopupOpen}">
+                <Border Style="{StaticResource PopupBorder}" Width="220">
+                    <StackPanel>
+                        <TextBlock Text="Recordatorio" FontWeight="SemiBold" Margin="0,0,0,6" />
+                        <DatePicker SelectedDate="{Binding ReminderEditor.Date}" SelectedDateFormat="Short" Margin="0,0,0,6" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="Hora:" VerticalAlignment="Center" Margin="0,0,6,0" />
+                            <ComboBox Width="56" ItemsSource="{x:Static vm:ReminderEditor.Hours}"
+                                      SelectedItem="{Binding ReminderEditor.Hour}" ItemStringFormat="D2" />
+                            <TextBlock Text=":" VerticalAlignment="Center" Margin="4,0" />
+                            <ComboBox Width="56" ItemsSource="{x:Static vm:ReminderEditor.Minutes}"
+                                      SelectedItem="{Binding ReminderEditor.Minute}" ItemStringFormat="D2" />
+                        </StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Guardar" Padding="10,2" IsDefault="True"
+                                    Command="{Binding SaveReminderCommand}" />
+                            <Button DockPanel.Dock="Right" Content="Cancelar" Padding="8,2" Margin="0,0,6,0"
+                                    Click="CancelReminder_Click" />
+                            <Button Content="Quitar recordatorio" Style="{StaticResource LinkButton}"
+                                    Visibility="{Binding HasReminder, Converter={StaticResource BoolToVis}}"
+                                    Command="{Binding ClearReminderCommand}" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </Popup>
+
+            <!-- ───── Título ───── -->
+            <Grid Grid.Row="1" Margin="8,4,8,2">
+                <TextBox Style="{StaticResource PaperTextBox}" FontWeight="Bold"
+                         FontSize="{Binding FontSize}" MaxLength="200"
+                         Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Style="{StaticResource PlaceholderText}" Text="Título / expediente" FontWeight="Bold"
+                           FontSize="{Binding FontSize}"
+                           Visibility="{Binding Title, Converter={StaticResource BoolToVisInverted}}" />
+            </Grid>
+
+            <!-- ───── Cuerpo (texto enriquecido) ───── -->
+            <Grid Grid.Row="2" Margin="4,0,4,0">
+                <RichTextBox x:Name="Body" Background="Transparent" BorderThickness="0" Padding="0"
+                             Foreground="{DynamicResource Note.Foreground}" CaretBrush="{DynamicResource Note.Foreground}"
+                             FontSize="{Binding FontSize}" AcceptsTab="True" AcceptsReturn="True"
+                             SpellCheck.IsEnabled="True" VerticalScrollBarVisibility="Auto"
+                             TextChanged="Body_TextChanged">
+                    <RichTextBox.Resources>
+                        <Style TargetType="Paragraph">
+                            <Setter Property="Margin" Value="0,0,0,2" />
+                        </Style>
+                        <Style TargetType="List">
+                            <Setter Property="Margin" Value="0,0,0,2" />
+                            <Setter Property="Padding" Value="18,0,0,0" />
+                        </Style>
+                    </RichTextBox.Resources>
+                    <FlowDocument PagePadding="4,2" />
+                </RichTextBox>
+                <TextBlock Style="{StaticResource PlaceholderText}" Text="Escriba aquí…" Margin="8,3,0,0"
+                           VerticalAlignment="Top" FontSize="{Binding FontSize}"
+                           Visibility="{Binding IsBodyEmpty, Converter={StaticResource BoolToVis}}" />
+            </Grid>
+
+            <!-- ───── Lista de tareas ───── -->
+            <StackPanel Grid.Row="3" Margin="8,2,8,0"
+                        Visibility="{Binding HasChecklist, Converter={StaticResource BoolToVis}}">
+                <ScrollViewer MaxHeight="120" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="ChecklistItems" ItemsSource="{Binding Checklist}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,1">
+                                    <CheckBox DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,4,0"
+                                              Focusable="False" IsChecked="{Binding IsDone}" />
+                                    <TextBox x:Name="ItemText" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                             PreviewKeyDown="ChecklistText_PreviewKeyDown"
+                                             FontSize="{Binding DataContext.FontSize, ElementName=ChecklistItems}">
+                                        <TextBox.Style>
+                                            <Style TargetType="TextBox" BasedOn="{StaticResource PaperTextBox}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Strikethrough" />
+                                                        <Setter Property="Opacity" Value="0.55" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBox.Style>
+                                    </TextBox>
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <Button Style="{StaticResource LinkButton}" Content="+ Agregar tarea"
+                        Command="{Binding AddChecklistItemCommand}" />
+            </StackPanel>
+
+            <!-- ───── Pie: barra de formato + recordatorio ───── -->
+            <DockPanel Grid.Row="4" Margin="4,0,6,2" LastChildFill="False">
+                <Button DockPanel.Dock="Right" Command="{Binding OpenReminderCommand}"
+                        Visibility="{Binding HasReminder, Converter={StaticResource BoolToVis}}"
+                        ToolTip="Cambiar recordatorio" Content="{Binding ReminderText}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource LinkButton}">
+                            <Setter Property="VerticalAlignment" Value="Center" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReminderDue}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource Note.Due}" />
+                                    <Setter Property="FontWeight" Value="Bold" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center"
+                            Visibility="{Binding IsActive, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8DD;" ToolTip="Negrita (Ctrl+B)"
+                            Command="EditingCommands.ToggleBold" CommandTarget="{Binding ElementName=Body}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8DC;" ToolTip="Subrayado (Ctrl+U)"
+                            Command="EditingCommands.ToggleUnderline" CommandTarget="{Binding ElementName=Body}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8DB;" ToolTip="Cursiva (Ctrl+I)"
+                            Command="EditingCommands.ToggleItalic" CommandTarget="{Binding ElementName=Body}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8FD;" ToolTip="Viñetas"
+                            Command="EditingCommands.ToggleBullets" CommandTarget="{Binding ElementName=Body}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE9D5;" ToolTip="Agregar tarea"
+                            Command="{Binding AddChecklistItemCommand}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8E8;" ToolTip="Letra más grande"
+                            Command="{Binding IncreaseFontCommand}" />
+                    <Button Style="{StaticResource FormatButton}" Content="&#xE8E7;" ToolTip="Letra más pequeña"
+                            Command="{Binding DecreaseFontCommand}" />
+                </StackPanel>
+            </DockPanel>
+
+            <!-- Marco que parpadea al localizar la nota desde la búsqueda o un recordatorio -->
+            <Border x:Name="FlashBorder" Grid.RowSpan="5" BorderThickness="3" Opacity="0" IsHitTestVisible="False"
+                    BorderBrush="{DynamicResource Note.Flash}" />
+        </Grid>
+    </Border>
+</Window>
