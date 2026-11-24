@@ -17,10 +17,10 @@ public static class FlowDocumentXamlSanitizer
     /// <summary>Anidamiento máximo de elementos.</summary>
     internal const int MaxDepth = 64;
 
-    // Sin Hyperlink: el RichTextBox no habilita documentos interactivos y un NavigateUri importado no aporta nada.
+    // Hyperlink se admite sólo con NavigateUri http/https/mailto (ver IsHyperlinkSafe).
     private static readonly HashSet<string> AllowedElements = new(StringComparer.Ordinal)
     {
-        "Section", "Paragraph", "Run", "Span", "Bold", "Italic", "Underline", "LineBreak",
+        "Section", "Paragraph", "Run", "Span", "Bold", "Italic", "Underline", "LineBreak", "Hyperlink",
         "List", "ListItem",
         "Table", "TableColumn", "TableRowGroup", "TableRow", "TableCell",
         "TextDecoration", "TextDecorationCollection",
@@ -55,7 +55,7 @@ public static class FlowDocumentXamlSanitizer
                         break;
                     case XmlNodeType.Element:
                         if (reader.Depth > MaxDepth) return false;
-                        if (!IsAllowedElement(reader) || !AreAttributesSafe(reader)) return false;
+                        if (!IsAllowedElement(reader) || !AreAttributesSafe(reader) || !IsHyperlinkSafe(reader)) return false;
                         break;
                 }
             }
@@ -75,6 +75,18 @@ public static class FlowDocumentXamlSanitizer
         var name = reader.LocalName;
         var dot = name.IndexOf('.');
         return AllowedElements.Contains(dot < 0 ? name : name[..dot]);
+    }
+
+    /// <summary>Un vínculo sólo puede apuntar a http/https/mailto. Se prohíben los elementos de propiedad
+    /// (&lt;Hyperlink.NavigateUri&gt;…) porque su contenido no pasaría por la validación de atributos.</summary>
+    private static bool IsHyperlinkSafe(XmlReader reader)
+    {
+        var name = reader.LocalName;
+        if (name.StartsWith("Hyperlink.", StringComparison.Ordinal)) return false;
+        if (name != "Hyperlink") return true;
+
+        var uri = reader.GetAttribute("NavigateUri");
+        return uri is null || NoteLinks.IsSafeStoredUri(uri);
     }
 
     private static bool AreAttributesSafe(XmlReader reader)

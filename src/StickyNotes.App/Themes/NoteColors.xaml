@@ -32,5 +32,7 @@
     <SolidColorBrush x:Key="Note.Hover" Color="#22000000" />
     <SolidColorBrush x:Key="Note.Pressed" Color="#38000000" />
     <SolidColorBrush x:Key="Note.Due" Color="#C62828" />
+    <!-- Vínculos del texto: azul oscuro, legible sobre todos los pasteles. -->
+    <SolidColorBrush x:Key="Note.Link" Color="#1A4FA0" />
     <SolidColorBrush x:Key="Note.Flash" Color="#E65100" />
 </ResourceDictionary>

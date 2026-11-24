@@ -172,8 +172,15 @@
                              Foreground="{DynamicResource Note.Foreground}" CaretBrush="{DynamicResource Note.Foreground}"
                              FontSize="{Binding FontSize}" AcceptsTab="True" AcceptsReturn="True"
                              SpellCheck.IsEnabled="True" VerticalScrollBarVisibility="Auto"
-                             TextChanged="Body_TextChanged">
+                             IsDocumentEnabled="True"
+                             TextChanged="Body_TextChanged" PreviewKeyDown="Body_PreviewKeyDown">
                     <RichTextBox.Resources>
+                        <!-- IsDocumentEnabled: Ctrl+clic abre el vínculo (clic normal sigue editando). -->
+                        <Style TargetType="Hyperlink">
+                            <Setter Property="Foreground" Value="{DynamicResource Note.Link}" />
+                            <Setter Property="ToolTipService.InitialShowDelay" Value="400" />
+                            <Setter Property="ToolTip" Value="{Binding NavigateUri, RelativeSource={RelativeSource Self}, StringFormat='{}{0}  (Ctrl + clic para abrir)'}" />
+                        </Style>
                         <Style TargetType="Paragraph">
                             <Setter Property="Margin" Value="0,0,0,2" />
                         </Style>
@@ -250,6 +257,8 @@
                             Command="EditingCommands.ToggleItalic" CommandTarget="{Binding ElementName=Body}" />
                     <Button Style="{StaticResource FormatButton}" Content="&#xE8FD;" ToolTip="Viñetas"
                             Command="EditingCommands.ToggleBullets" CommandTarget="{Binding ElementName=Body}" />
+                    <Button x:Name="LinkButton" Style="{StaticResource FormatButton}" Content="&#xE71B;"
+                            ToolTip="Vínculo (Ctrl+K). Ctrl + clic en un vínculo para abrirlo" Click="LinkButton_Click" />
                     <Button Style="{StaticResource FormatButton}" Content="&#xE9D5;" ToolTip="Agregar tarea"
                             Command="{Binding AddChecklistItemCommand}" />
                     <Button Style="{StaticResource FormatButton}" Content="&#xE8E8;" ToolTip="Letra más grande"
@@ -258,6 +267,30 @@
                             Command="{Binding DecreaseFontCommand}" />
                 </StackPanel>
             </DockPanel>
+
+            <!-- ───── Popup de vínculo (Ctrl+K o botón de la barra) ───── -->
+            <Popup x:Name="LinkPopup" Grid.Row="4" PlacementTarget="{Binding ElementName=LinkButton}" Placement="Top"
+                   StaysOpen="False" AllowsTransparency="True" Closed="LinkPopup_Closed">
+                <Border Style="{StaticResource PopupBorder}" Width="240">
+                    <StackPanel>
+                        <TextBlock Text="Dirección del vínculo" FontWeight="SemiBold" Margin="0,0,0,4" />
+                        <TextBox x:Name="LinkUrlBox" Padding="2" Margin="0,0,0,4" PreviewKeyDown="LinkUrlBox_PreviewKeyDown" />
+                        <StackPanel x:Name="LinkTextPanel" Margin="0,0,0,4">
+                            <TextBlock Text="Texto a mostrar (opcional)" Margin="0,0,0,2" />
+                            <TextBox x:Name="LinkTextBox" Padding="2" PreviewKeyDown="LinkUrlBox_PreviewKeyDown" />
+                        </StackPanel>
+                        <TextBlock x:Name="LinkError" Foreground="{DynamicResource Note.Due}" FontSize="11"
+                                   TextWrapping="Wrap" Margin="0,0,0,4" Visibility="Collapsed" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Aceptar" Padding="10,2" Click="LinkApply_Click" />
+                            <Button DockPanel.Dock="Right" Content="Cancelar" Padding="8,2" Margin="0,0,6,0"
+                                    Click="LinkCancel_Click" />
+                            <Button x:Name="LinkRemoveButton" Content="Quitar vínculo" Style="{StaticResource LinkButton}"
+                                    VerticalAlignment="Center" Click="LinkRemove_Click" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+            </Popup>
 
             <!-- Marco que parpadea al localizar la nota desde la búsqueda o un recordatorio -->
             <Border x:Name="FlashBorder" Grid.RowSpan="5" BorderThickness="3" Opacity="0" IsHitTestVisible="False"

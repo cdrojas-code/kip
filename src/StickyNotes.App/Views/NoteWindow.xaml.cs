@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Navigation;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -60,6 +62,9 @@ public partial class NoteWindow : Window
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
         LoadDocument();
+        Body.AddHandler(Hyperlink.RequestNavigateEvent, new RequestNavigateEventHandler(OnHyperlinkRequestNavigate));
+        DataObject.AddPastingHandler(Body, OnBodyPasting);
+        Body.AddHandler(TextInputEvent, new TextCompositionEventHandler(OnBodyTextInput), handledEventsToo: true);
 
         SourceInitialized += OnSourceInitialized;
         // Sólo se registran movimientos tras mostrarse: los ajustes de DPI al crear la ventana no son del usuario.
@@ -179,6 +184,156 @@ public partial class NoteWindow : Window
     {
         timer.Stop();
         timer.Start();
+    }
+
+    // ───────────── Vínculos ─────────────
+
+    private Hyperlink? _editingLink;
+    private TextRange? _linkTarget;
+
+    private void OnHyperlinkRequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        e.Handled = true;
+        NoteLinks.TryOpen(e.Uri);
+    }
+
+    private void Body_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.K && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            e.Handled = true;
+            OpenLinkPopup();
+        }
+        else if (e.Key == Key.Enter)
+        {
+            // Enter inserta el salto de párrafo durante el propio KeyDown: al ejecutarse esto ya está aplicado.
+            Dispatcher.BeginInvoke(DispatcherPriority.Input, () => NoteLinks.LinkifyWordBefore(Body.Document, Body.CaretPosition));
+        }
+    }
+
+    /// <summary>Espacio/Tab llegan como TextInput (WM_CHAR), después del KeyDown. Con handledEventsToo este
+    /// manejador corre tras la inserción del RichTextBox: "www.ejemplo.com␣" → vínculo.</summary>
+    private void OnBodyTextInput(object sender, TextCompositionEventArgs e)
+    {
+        if (e.Text.Length > 0 && char.IsWhiteSpace(e.Text[^1]))
+            NoteLinks.LinkifyWordBefore(Body.Document, Body.CaretPosition);
+    }
+
+    private void OnBodyPasting(object sender, DataObjectPastingEventArgs e)
+    {
+        // Sólo se enlaza lo pegado: posición inicial con gravedad hacia atrás para que no avance con el texto insertado.
+        var start = Body.Selection.Start.GetPositionAtOffset(0, LogicalDirection.Backward);
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+        {
+            if (start is not null) NoteLinks.Linkify(Body.Document, start, Body.CaretPosition);
+        });
+    }
+
+    private void LinkButton_Click(object sender, RoutedEventArgs e) => OpenLinkPopup();
+
+    private void OpenLinkPopup()
+    {
+        var selection = Body.Selection;
+        _linkTarget = new TextRange(selection.Start, selection.End);
+        _editingLink = NoteLinks.FindAt(selection.Start) ?? (selection.IsEmpty ? null : NoteLinks.FindAt(selection.End));
+
+        var selectedText = selection.Text.Trim();
+        LinkUrlBox.Text = _editingLink?.NavigateUri?.OriginalString
+                          ?? (NoteLinks.TryNormalize(selectedText, out _) ? selectedText : string.Empty);
+        LinkTextBox.Text = string.Empty;
+        LinkTextPanel.Visibility = _editingLink is null && selection.IsEmpty ? Visibility.Visible : Visibility.Collapsed;
+        LinkRemoveButton.Visibility = _editingLink is null ? Visibility.Collapsed : Visibility.Visible;
+        LinkError.Visibility = Visibility.Collapsed;
+
+        if (!IsActive) Activate();
+        LinkPopup.IsOpen = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
+        {
+            LinkUrlBox.Focus();
+            LinkUrlBox.SelectAll();
+        });
+    }
+
+    private void LinkApply_Click(object sender, RoutedEventArgs e) => ApplyLink();
+
+    private void LinkUrlBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) { e.Handled = true; ApplyLink(); }
+        else if (e.Key == Key.Escape) { e.Handled = true; CloseLinkPopup(); }
+    }
+
+    private void LinkCancel_Click(object sender, RoutedEventArgs e) => CloseLinkPopup();
+
+    private void LinkRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (_editingLink is { Parent: not null } link)
+        {
+            NoteLinks.Unwrap(link);
+            RestartTimer(_contentTimer);
+        }
+        CloseLinkPopup();
+    }
+
+    private void ApplyLink()
+    {
+        if (!NoteLinks.TryNormalize(LinkUrlBox.Text, out var uri))
+        {
+            ShowLinkError("Escriba una dirección web (p. ej. www.ejemplo.com) o un correo.");
+            return;
+        }
+
+        TextPointer? caretAfter = null;
+        Body.BeginChange();
+        try
+        {
+            if (_editingLink is { Parent: not null } existing)
+            {
+                existing.NavigateUri = uri;
+            }
+            else if (_linkTarget is { IsEmpty: false } target)
+            {
+                var link = new Hyperlink(target.Start, target.End) { NavigateUri = uri };
+                caretAfter = link.ElementEnd;
+            }
+            else
+            {
+                var text = string.IsNullOrWhiteSpace(LinkTextBox.Text) ? LinkUrlBox.Text.Trim() : LinkTextBox.Text.Trim();
+                var position = (_linkTarget?.Start ?? Body.CaretPosition).GetInsertionPosition(LogicalDirection.Forward);
+                var link = new Hyperlink(new Run(text), position) { NavigateUri = uri };
+                caretAfter = link.ElementEnd;
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ArgumentException)
+        {
+            ShowLinkError("Seleccione texto de un solo párrafo para convertirlo en vínculo.");
+            return;
+        }
+        finally
+        {
+            Body.EndChange();
+        }
+
+        RestartTimer(_contentTimer); // cambiar NavigateUri no siempre dispara TextChanged
+        CloseLinkPopup();
+        if (caretAfter is not null) Body.CaretPosition = caretAfter;
+    }
+
+    private void ShowLinkError(string message)
+    {
+        LinkError.Text = message;
+        LinkError.Visibility = Visibility.Visible;
+    }
+
+    private void CloseLinkPopup()
+    {
+        LinkPopup.IsOpen = false;
+        Body.Focus();
+    }
+
+    private void LinkPopup_Closed(object? sender, EventArgs e)
+    {
+        _editingLink = null;
+        _linkTarget = null;
     }
 
     // ───────────── Interacción ─────────────

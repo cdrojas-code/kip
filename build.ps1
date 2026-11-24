@@ -2,12 +2,12 @@
 .SYNOPSIS
   Compila, prueba, publica (self-contained win-x64) y genera el instalador de Kip.
 .EXAMPLE
-  .\build.ps1                 # versión 1.0.0
+  .\build.ps1                 # versión 1.1.0
   .\build.ps1 -Version 1.2.0
   .\build.ps1 -SkipTests
 #>
 param(
-    [string]$Version = "1.0.0",
+    [string]$Version = "1.1.0",
     [switch]$SkipTests
 )
 

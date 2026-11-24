@@ -25,6 +25,7 @@ It works offline, stores everything **only on your computer**, and hides your no
 | 🗂️ **Multiple notes** | Create as many independent notes as you want and place them anywhere, on any monitor. |
 | 🎨 **Post-it style** | 6 colors, 3 fixed sizes (small / medium / large), a bold title per note (client, case number…), adjustable font size. |
 | ✍️ **Rich text** | Bold, italic, underline, bullets. |
+| 🔗 **Hyperlinks** | URLs become links as you type or paste; `Ctrl+K` to link selected text, edit or remove a link; `Ctrl`+click opens it. Only `http`, `https` and `mailto` are allowed. |
 | ☑️ **Checklists** | Tasks with checkboxes; *Enter* adds the next one, *Backspace* on an empty one removes it. |
 | ⏰ **Reminders** | Set a date and time; you get a Windows notification and the note's badge turns red when it's due. |
 | 🕶️ **Screen-share privacy** | Notes are invisible in screen sharing and screenshots (Teams, Zoom, Meet…) while you still see them. Notifications show no content while sharing. |
@@ -128,6 +129,7 @@ Funciona sin internet, guarda todo **sólo en tu computadora** y oculta las nota
 | 🗂️ **Varias notas** | Crea todas las notas que quieras y colócalas donde quieras, en cualquier monitor. |
 | 🎨 **Estilo post-it** | 6 colores, 3 tamaños fijos (pequeño / mediano / grande), título en negrita por nota (cliente, expediente…), tamaño de letra ajustable. |
 | ✍️ **Texto con formato** | Negrita, cursiva, subrayado y viñetas. |
+| 🔗 **Hipervínculos** | Las direcciones se convierten en vínculos al escribirlas o pegarlas; `Ctrl+K` enlaza el texto seleccionado, edita o quita un vínculo; `Ctrl`+clic lo abre. Sólo se permiten `http`, `https` y `mailto`. |
 | ☑️ **Listas de tareas** | Tareas con casilla; *Enter* agrega la siguiente y *Retroceso* en una vacía la elimina. |
 | ⏰ **Recordatorios** | Elige fecha y hora; recibirás una notificación de Windows y la etiqueta de la nota se pone roja al vencer. |
 | 🕶️ **Privacidad al compartir pantalla** | Las notas son invisibles en pantallas compartidas y capturas (Teams, Zoom, Meet…), pero tú sí las ves. Las notificaciones no muestran contenido mientras compartes. |
@@ -156,7 +158,7 @@ Para desinstalar, usa *Configuración → Aplicaciones*. **Tus notas se conserva
 - **Nota nueva:** doble clic en el icono de Kip en la bandeja del sistema (junto al reloj), o el botón **+** de cualquier nota.
 - **Mover:** arrastra la nota desde su franja superior. El botón del **candado** la fija en su lugar.
 - **Color / tamaño / recordatorio:** botones de la franja superior de la nota.
-- **Formato y tareas:** haz clic dentro de la nota; abajo aparece una barra (negrita, subrayado, cursiva, viñetas, *agregar tarea*, tamaño de letra).
+- **Formato y tareas:** haz clic dentro de la nota; abajo aparece una barra (negrita, subrayado, cursiva, viñetas, *vínculo*, *agregar tarea*, tamaño de letra).
 - **Eliminar:** el botón de la papelera envía la nota a la papelera (*Icono de la bandeja → Papelera…* para restaurarla).
 - **Ocultar todo:** `Ctrl+Alt+N`, o *Icono de la bandeja → Modo presentación*.
 - **Menú de la bandeja:** buscar, papelera, exportar / importar, abrir carpeta de copias, iniciar con Windows, ocultar al compartir pantalla, acerca de, salir.
